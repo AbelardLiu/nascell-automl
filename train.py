@@ -45,28 +45,32 @@ def policy_network(state, max_layers):
         #return tf.slice(outputs, [0, 4*max_layers-1, 0], [1, 1, 4*max_layers]) # Returned last output of rnn
         return outputs[:, -1:, :]      
 
-def train(mnist):
+def train(dataset, learning_rate=0.001, batch_size=100, num_input=784, num_classes=10, train_size=100000, test_size=10000):
     global args
     sess = tf.Session()
     global_step = tf.Variable(0, trainable=False)
     starter_learning_rate = 0.1
-    learning_rate = tf.train.exponential_decay(0.99, global_step,
+    learning_rate_op = tf.train.exponential_decay(0.99, global_step,
                                            500, 0.96, staircase=True)
 
-    optimizer = tf.train.RMSPropOptimizer(learning_rate=learning_rate)
+    optimizer = tf.train.RMSPropOptimizer(learning_rate=learning_rate_op)
 
     reinforce = Reinforce(sess, optimizer, policy_network, args.max_layers, global_step)
-    net_manager = NetManager(num_input=784,
-                             num_classes=10,
-                             learning_rate=0.001,
-                             mnist=mnist,
-                             bathc_size=100)
+    net_manager = NetManager(num_input=num_input,
+                             num_classes=num_classes,
+                             learning_rate=learning_rate,
+                             dataset=dataset,
+                             bathc_size=batch_size,
+                             train_size=train_size,
+                             test_size=test_size)
 
     MAX_EPISODES = 2500
     step = 0
     state = np.array([[10.0, 128.0, 1.0, 1.0]*args.max_layers], dtype=np.float32)
     pre_acc = 0.0
     total_rewards = 0
+    max_acc = 0.0
+    max_action = None
     for i_episode in range(MAX_EPISODES):       
         action = reinforce.get_action(state)
         print("ca:", action)
@@ -84,10 +88,13 @@ def train(mnist):
         step += 1
         ls = reinforce.train_step(1)
         log_str = "current time:  "+str(datetime.datetime.now().time())+" episode:  "+str(i_episode)+" loss:  "+str(ls)+" last_state:  "+str(state)+" last_reward:  "+str(reward)+"\n"
+        log_max_str = "current time:  "+str(datetime.datetime.now().time())+" episode:  "+str(i_episode)+" max accuracy:  "+str(max_acc)+" action:  "+str(max_action)+"\n"
         log = open("lg3.txt", "a+")
         log.write(log_str)
+        log.write(log_max_str)
         log.close()
         print(log_str)
+        print(log_max_str)
 
 def main():
     global args
