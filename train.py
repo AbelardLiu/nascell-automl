@@ -13,10 +13,14 @@ def parse_args():
     desc = "TensorFlow implementation of 'Neural Architecture Search with Reinforcement Learning'"
     parser = argparse.ArgumentParser(description=desc)
 
-    parser.add_argument('--max_layers', default=2)
+    parser.add_argument('--max_layers', help="max layer of cnn", default=2, type=int)
+    parser.add_argument('--mode', help="mode of nas, current support modes: [train, evaluate]", default='train')
+    parser.add_argument('--action', help="specified action. In train mode, it is the initial action; In evaluate mode, it is the evaluted action",
+                            default=None)
+    parser.add_argument('--evaluate_time', help="evaluate time of evaluate mode", default=1, type=int)
 
     args = parser.parse_args()
-    args.max_layers = int(args.max_layers)
+    #args.max_layers = int(args.max_layers)
     return args
 
 
@@ -99,9 +103,11 @@ def train(dataset, learning_rate=0.001, batch_size=100, num_input=784, num_class
 def main():
     global args
     args = parse_args()
+    print(args)
 
-    mnist = input_data.read_data_sets("MNIST_data/", one_hot=True)
-    train(mnist)
+
+    #mnist = input_data.read_data_sets("MNIST_data/", one_hot=True)
+    #train(mnist)
 
 if __name__ == '__main__':
   main()
